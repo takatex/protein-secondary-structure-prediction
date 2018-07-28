@@ -1,0 +1,60 @@
+# -*- coding: utf-8 -*-
+import os
+import numpy as np
+import subprocess
+
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
+
+from download_dataset import download_dataset
+
+DATASET_PATH = '../data/cb513.npz'
+
+class MyDataset(Dataset):
+
+    def __init__(self, X, y, mask):
+        self.X = X
+        self.y = y
+        self.mask = mask
+
+    def __len__(self):
+        return len(self.y)
+
+    def __getitem__(self, idx):
+        x = self.X[idx]
+        y = self.y[idx]
+        mask = self.mask[idx]
+        return x, y, mask
+
+class LoadDataset(object):
+
+    def __init__(self, batch_size_train, batch_size_test):
+        self.batch_size_train = batch_size_train
+        self.batch_size_test = batch_size_test
+        self.X, self.y, self.mask = self.load_dataset()
+
+    def load_dataset(self):
+        if not os.path.isfile(DATASET_PATH):
+            download_dataset()
+        else:
+            pass
+
+        loaded = np.load(DATASET_PATH)
+        return loaded['X'], loaded['y'], loaded['mask']
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        train_idx, test_idx = idx
+        X_train, y_train, mask_train, X_test, y_test, mask_test = \
+            self.X[train_idx], self.y[train_idx], self.mask[train_idx], \
+            self.X[test_idx], self.y[test_idx], self.mask[test_idx]
+
+        D_train = MyDataset(X_train, y_train, mask_train)
+        train_loader = DataLoader(D_train, batch_size=self.batch_size_train, shuffle=True)
+
+        D_test = MyDataset(X_test, y_test, mask_test)
+        test_loader = DataLoader(D_test, batch_size=self.batch_size_test, shuffle=False)
+
+        return train_loader, test_loader
