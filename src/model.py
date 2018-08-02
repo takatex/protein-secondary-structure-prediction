@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 class Net(nn.Module):
     def __init__(self):
-        super(CNN, self).__init__()
+        super(Net, self).__init__()
 
         # Conv1d(in_channels, out_channels, kernel_size, stride, padding)
         self.conv1 = nn.Sequential(
@@ -41,7 +41,7 @@ class Net(nn.Module):
         # bidirectional lstm
         out, _ = self.blstm(conv_out)
 
-        # Output shape is (batch_size x seq_len x output_size)
+        # Output shape is (batch_size x output_size x seq_len)
         out = self.fc(out)
         out = F.softmax(out, dim=2)
         return out

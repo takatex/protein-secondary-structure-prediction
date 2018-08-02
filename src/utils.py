@@ -3,34 +3,49 @@ import platform
 import numpy as np 
 import gzip
 
+import torch
+from torch import nn
 
-def hms(seconds):
-    seconds = np.floor(seconds)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
+class LossFunc(object):
 
-    return "%02d:%02d:%02d" % (hours, minutes, seconds)
+    def __init__(self):
+        self.loss = nn.CrossEntropyLoss()
+
+    def __call__(self, out, target, seq_len):
+        """
+        out.shape : (batch_size, class_num, seq_len)
+        target.shape : (batch_size, seq_len)
+        """
+        out = torch.clamp(out, 1e-15, 1 - 1e-15)
+        return torch.Tensor([self.loss(o[:l], t[:l])
+                             for o, t, l in zip(out, target, seq_len)]).sum()
 
 
+def accuracy(out, target, seq_len):
+    """
+    out.shape : (batch_size, seq_len, class_num)
+    target.shape : (class_num, seq_len)
+    seq_len.shape : (batch_size)
+    """
+    out = out.cpu().data.numpy()
+    target = target.cpu().data.numpy()
+    seq_len = seq_len.cpu().data.numpy()
+
+    out = out.argmax(axis=2)
+    return np.array([np.equal(o[:l], t[:l]).sum()/l
+                     for o, t, l in zip(out, target, seq_len)]).mean()
+
+
+def load_gz(path): # load a .npy.gz file
+    if path.endswith(".gz"):
+        f = gzip.open(path, 'rb')
+        return np.load(f)
+    else:
+        return np.load(path)
+
+######################
 def timestamp():
     return time.strftime("%Y%m%d-%H%M%S", time.localtime())
-    
-def hostname():
-    return platform.node()
-    
-def generate_expid(arch_name):
-    return "%s-%s-%s" % (arch_name, hostname(), timestamp())
-
-
-
-def one_hot(vec, m=None):
-    if m is None:
-        m = int(np.max(vec)) + 1
-
-    return np.eye(m)[vec]
-
-
-
 
 def log_losses(y, t, eps=1e-15):
     if t.ndim == 1:
@@ -59,24 +74,10 @@ def accuracy(y, t):
     predictions = np.argmax(y, axis=1)
     return np.mean(predictions == t)
 
-def softmax(x): 
-    m = np.max(x, axis=1, keepdims=True)
-    e = np.exp(x - m)
-    return e / np.sum(e, axis=1, keepdims=True)
-
 def entropy(x):
     h = -x * np.log(x)
     h[np.invert(np.isfinite(h))] = 0
     return h.sum(1)
-
-
-
-def conf_matrix(p, t, num_classes):
-    if p.ndim == 1:
-        p = one_hot(p, num_classes)
-    if t.ndim == 1:
-        t = one_hot(t, num_classes)
-    return np.dot(p.T, t)
 
 
 def accuracy_topn(y, t, n=5):
@@ -90,28 +91,4 @@ def accuracy_topn(y, t, n=5):
     return np.mean(accs)
 
 
-def current_learning_rate(schedule, idx):
-    s = schedule.keys()
-    s.sort()
-    current_lr = schedule[0]
-    for i in s:
-        if idx >= i:
-            current_lr = schedule[i]
 
-    return current_lr
-
-
-def load_gz(path): # load a .npy.gz file
-    if path.endswith(".gz"):
-        f = gzip.open(path, 'rb')
-        return np.load(f)
-    else:
-        return np.load(path)
-
-
-def log_loss_std(y, t, eps=1e-15):
-    """
-    cross entropy loss, summed over classes, mean over batches
-    """
-    losses = log_losses(y, t, eps)
-    return np.std(losses)

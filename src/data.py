@@ -12,10 +12,10 @@ DATASET_PATH = '../data/cb513.npz'
 
 class MyDataset(Dataset):
 
-    def __init__(self, X, y, mask):
+    def __init__(self, X, y, seq_len):
         self.X = X
-        self.y = y
-        self.mask = mask
+        self.y = y.astype(int)
+        self.seq_len = seq_len.astype(int)
 
     def __len__(self):
         return len(self.y)
@@ -23,8 +23,8 @@ class MyDataset(Dataset):
     def __getitem__(self, idx):
         x = self.X[idx]
         y = self.y[idx]
-        mask = self.mask[idx]
-        return x, y, mask
+        seq_len = self.seq_len[idx]
+        return x, y, seq_len
 
 class LoadDataset(object):
 
@@ -40,7 +40,7 @@ class LoadDataset(object):
             pass
 
         loaded = np.load(DATASET_PATH)
-        return loaded['X'], loaded['y'], loaded['mask']
+        return loaded['X'], loaded['y'], loaded['seq_len']
 
     def __len__(self):
         return len(self.X)
