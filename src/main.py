@@ -6,8 +6,7 @@ import pickle
 import time
 import argparse
 import collections
-from utils import *
-# from visualizer import *
+from sklearn.model_selection import KFold
 
 import torch
 import torch.nn as nn
@@ -18,42 +17,50 @@ from torch.autograd import Variable
 
 from data import LoadDataset
 from model import Net
-from sklearn.model_selection import KFold
+from utils import *
 
 # params
 # ----------
-parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=300,
-                        help='The number of epochs to run (default: 300)')
-parser.add_argument('--batch_size', type=int, default=64,
-                        help='The number of batch (default: 64)')
-parser.add_argument('--hidden_size', type=int, default=128,
-                        help='The number of features in the hidden state h (default: 256)')
-parser.add_argument('--num_layers', type=int, default=3,
-                        help='The number of layers (default: 3)')
-parser.add_argument('--result_path', type=str, default='./result',
-                        help='Result path (default: ./result)')
+parser = argparse.ArgumentParser(description='Protein Secondary Structure Prediction')
+parser.add_argument('-e', '--epochs', type=int, default=1000,
+                    help='The number of epochs to run (default: 1000)')
+parser.add_argument('-b', '--batch_size_train', type=int, default=128,
+                    help='input batch size for training (default: 128)')
+parser.add_argument('-b_test', '--batch_size_test', type=int, default=1024,
+                    help='input batch size for testing (default: 1024)')
+parser.add_argument('-k', '--k_fold', type=int, default=10,
+                    help='K-Folds cross-validator (default: 10)')
+parser.add_argument('--save_dir', type=str, default='../data/result',
+                    help='Result path (default: ../data/result)')
 parser.add_argument('--no_cuda', action='store_true', default=False,
-                        help='disables CUDA training')
+                    help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
+                    help='random seed (default: 1)')
 
 args = parser.parse_args()
 
 
-def train(model, device, train_loader, optimizer, loss_function, epoch):
+def train(model, device, train_loader, optimizer, loss_function):
     model.train()
+    train_loss = 0
     len_ = len(train_loader)
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
+    for batch_idx, (data, target, seq_len) in enumerate(train_loader):
+        data, target, seq_len = data.to(device), target.to(device), seq_len.to(device)
         optimizer.zero_grad()
-        output = model(data)
-        loss = loss_function(output, target)
+        out = model(data)
+        loss = loss_function(out, target, seq_len)
         loss.backward()
+        # print(loss)
+        # loss = loss.to(device)
+        # print(loss)
         optimizer.step()
-        show_progress(epoch, batch_idx, len_, loss.item())
+        train_loss += loss.item()
+        # print(f'\rloss={loss.item()/len(data):.5f}', end=', ')
 
-    return loss.item()
+    train_loss /= len_
+    print(f'loss={train_loss:.5f}', end=', ')
+
+    return train_loss
 
 
 def test(model, device, test_loader, loss_function):
@@ -62,20 +69,17 @@ def test(model, device, test_loader, loss_function):
     acc = 0
     len_ = len(test_loader)
     with torch.no_grad():
-        for i, (data, target) in enumerate(test_loader):
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += loss_function(output, target).cpu().numpy() # sum up batch loss
-            output = output.cpu().numpy()
-            target = target.cpu().numpy()
-
-            acc += np.abs(t - o)
+        for i, (data, target, seq_len) in enumerate(test_loader):
+            data, target, seq_len = data.to(device), target.to(device), seq_len.to(device)
+            out = model(data)
+            test_loss += loss_function(out, target, seq_len).cpu().data.numpy() # sum up batch loss
+            acc += accuracy(out, target, seq_len)
 
     test_loss /= len_
     acc /= len_
+    print(f'acc={acc:.2f}', end=', ')
 
     return test_loss, acc
-
 
 
 def main():
@@ -83,33 +87,34 @@ def main():
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    result_path = os.path.join(args.result_path, args.model)
-    os.makedirs(result_path, exist_ok=True)
+    # make directory to save train history and model
+    save_dir = f'{args.save_dir}_{timestamp()}'
+    os.makedirs(save_dir, exist_ok=True)
 
     # laod dataset and set k-fold cross validation
-    D = LoadDataset(batch_size_train=1, batch_size_test=1)
+    D = LoadDataset(args.batch_size_train, args.batch_size_test)
     idxs = np.arange(D.__len__())
-    kf = KFold(n_splits=args.k)
+    kf = KFold(n_splits=args.k_fold)
 
     for k, idx in enumerate(kf.split(idxs)):
-        train_loader, test_loader = D[idx]
+        train_loader, test_loader = D(idx)
 
         # model, loss_function, optimizer
-        model = Net().to(device).double()
-        loss_function = load_loss_function()
-        optimizer = torch.optim.Adam(model.parameters())
+        model = Net().to(device)
+        loss_function = loss_func
+        optimizer = torch.optim.Adam(model.parameters(), weight_decay=0.01)
 
         # train and test
         history = []
-        for epoch in range(1, args.epochs + 1):
-            train_loss = train(model, device, train_loader, optimizer, loss_function, epoch)
-            test_loss, count = test(model, device, test_loader, loss_function)
-            history.append([train_loss, test_loss, hard_acc, soft_acc])
-            show_progress(epoch, train_loss, test_loss, hard_acc, soft_acc)
+        for e in range(1, args.epochs + 1):
+            train_loss = train(model, device, train_loader, optimizer, loss_function)
+            test_loss, acc = test(model, device, test_loader, loss_function)
+            history.append([train_loss, test_loss, acc])
+            show_progress(k+1, args.k_fold, e, args.epochs)
 
         # save train history and model
-        np.save(os.path.join(result_path, f'history_{args.model}.npy'), np.array(history))
-        torch.save(model.state_dict(), os.path.join(result_path, f'{args.model}.pth'))
+        save_history(k, history, save_dir)
+        save_model(k, model, save_dir)
 
 if __name__ == '__main__':
     main()

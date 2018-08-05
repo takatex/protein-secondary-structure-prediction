@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from download_dataset import download_dataset
 
-DATASET_PATH = '../data/cb513.npz'
+DATASET_PATH = '../data/cb513/cb513.npz'
 
 class MyDataset(Dataset):
 
@@ -45,7 +45,7 @@ class LoadDataset(object):
     def __len__(self):
         return len(self.X)
 
-    def __getitem__(self, idx):
+    def __call__(self, idx):
         train_idx, test_idx = idx
         X_train, y_train, mask_train, X_test, y_test, mask_test = \
             self.X[train_idx], self.y[train_idx], self.mask[train_idx], \

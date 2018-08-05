@@ -5,9 +5,9 @@ import os
 import numpy as np
 from utils import load_gz
 
-TRAIN_PATH = '../data/cullpdb+profile_6133_filtered.npy.gz'
-TEST_PATH = '../data/cb513+profile_split1.npy.gz'
-DATASET_PATH = '../data/cb513.npz'
+TRAIN_PATH = '../data/cb513/cullpdb+profile_6133_filtered.npy.gz'
+TEST_PATH = '../data/cb513/cb513+profile_split1.npy.gz'
+DATASET_PATH = '../data/cb513/cb513.npz'
 
 def download_dataset():
     print('Download CB513 dataset ...')

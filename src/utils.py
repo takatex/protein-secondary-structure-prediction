@@ -1,24 +1,33 @@
+import os
 import time
 import platform
-import numpy as np 
+import numpy as np
 import gzip
 
 import torch
 from torch import nn
 
-class LossFunc(object):
 
-    def __init__(self):
-        self.loss = nn.CrossEntropyLoss()
+def loss_func(out, target, seq_len):
+    loss = 0
+    for o, t, l in zip(out, target, seq_len):
+        loss += nn.CrossEntropyLoss()(o[:l], t[:l])
+    return loss
 
-    def __call__(self, out, target, seq_len):
-        """
-        out.shape : (batch_size, class_num, seq_len)
-        target.shape : (batch_size, seq_len)
-        """
-        out = torch.clamp(out, 1e-15, 1 - 1e-15)
-        return torch.Tensor([self.loss(o[:l], t[:l])
-                             for o, t, l in zip(out, target, seq_len)]).sum()
+# class LossFunc(object):
+#
+#     def __init__(self):
+#         self.loss = nn.CrossEntropyLoss()
+#
+#     def __call__(self, out, target, seq_len):
+#         """
+#         out.shape : (batch_size, class_num, seq_len)
+#         target.shape : (batch_size, seq_len)
+#         """
+#         out = torch.clamp(out, 1e-15, 1 - 1e-15)
+#         return torch.tensor([self.loss(o[:l], t[:l])
+#                              for o, t, l in zip(out, target, seq_len)],
+#                             requires_grad=True).sum()
 
 
 def accuracy(out, target, seq_len):
@@ -43,52 +52,19 @@ def load_gz(path): # load a .npy.gz file
     else:
         return np.load(path)
 
-######################
 def timestamp():
-    return time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    return time.strftime("%Y%m%d%H%M", time.localtime())
 
-def log_losses(y, t, eps=1e-15):
-    if t.ndim == 1:
-        t = one_hot(t)
+# def show_progress(k, e, b, b_total, loss):
+#     print(f'\r{e:3d} : [{b:3d} / {b_total:3d}] loss : {loss:.2f}', end='')
 
-    y = np.clip(y, eps, 1 - eps)
-    losses = -np.sum(t * np.log(y), axis=1)
-    return losses
+def show_progress(k, k_total, e, e_total):
+    print(f'k:({k:2d}/{k_total:2d}), e:({e:3d}/{e_total:3d})')
 
-def log_loss(y, t, eps=1e-15):
-    """
-    cross entropy loss, summed over classes, mean over batches
-    """
-    losses = log_losses(y, t, eps)
-    return np.mean(losses)
+def save_history(k, history, save_dir):
+    save_path = os.path.join(save_dir, f'history_{k}.npy')
+    np.save(save_path, history)
 
-def proteins_acc(out, label, mask):
-    out = np.argmax(out, axis=2)
-    return np.sum(((out == label).flatten()*mask.flatten())).astype('float32') / np.sum(mask).astype('float32')
-
-
-def accuracy(y, t):
-    if t.ndim == 2:
-        t = np.argmax(t, axis=1)
-        
-    predictions = np.argmax(y, axis=1)
-    return np.mean(predictions == t)
-
-def entropy(x):
-    h = -x * np.log(x)
-    h[np.invert(np.isfinite(h))] = 0
-    return h.sum(1)
-
-
-def accuracy_topn(y, t, n=5):
-    if t.ndim == 2:
-        t = np.argmax(t, axis=1)
-    
-    predictions = np.argsort(y, axis=1)[:, -n:]    
-    
-    accs = np.any(predictions == t[:, None], axis=1)
-
-    return np.mean(accs)
-
-
-
+def save_model(k, model, save_dir):
+    save_path = os.path.join(save_dir, f'model_{k}.pth')
+    torch.save(model.state_dict(), save_path)
