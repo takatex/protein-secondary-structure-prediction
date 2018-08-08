@@ -3,6 +3,7 @@
 
 import os
 import numpy as np
+import subprocess
 from utils import load_gz
 
 TRAIN_PATH = '../data/cb513/cullpdb+profile_6133_filtered.npy.gz'
@@ -11,22 +12,23 @@ DATASET_PATH = '../data/cb513/cb513.npz'
 
 def download_dataset():
     print('Download CB513 dataset ...')
+    os.makedirs('../data/cb513', exist_ok=True)
+    subprocess.call("./download_dataset.sh", shell=True)
     X_train, y_train, seq_len_train = get_train()
     X_test, y_test, seq_len_test = get_test()
     X = np.append(X_train, X_test, axis=0)
     y = np.append(y_train, y_test, axis=0)
     seq_len = np.append(seq_len_train, seq_len_test, axis=0)
-    # print(type(y[0][0]))
     np.savez_compressed(DATASET_PATH, X=X, y=y, seq_len=seq_len)
     print(f'Saved CB513 dataset in {DATASET_PATH}')
 
 
 def get_train():
-    if not os.path.isfile(TRAIN_PATH):
-        # print("Train path is not downloaded ...")
-        subprocess.call("./download_train.sh", shell=True)
-    else:
-        pass
+    # if not os.path.isfile(TRAIN_PATH):
+    #     print("sss")
+    #     subprocess.call("./download_train.sh", shell=True)
+    # else:
+    #     pass
         # print("Train path is downloaded ...")
     # print("Loading train data ...")
     X_in = load_gz(TRAIN_PATH)
@@ -80,8 +82,8 @@ def get_train():
 
 
 def get_test():
-    if not os.path.isfile(TEST_PATH):
-        subprocess.call("./download_test.sh", shell=True)
+    # if not os.path.isfile(TEST_PATH):
+    #     subprocess.call("./download_test.sh", shell=True)
     # print("Loading test data ...")
     X_test_in = load_gz(TEST_PATH)
     X_test = np.reshape(X_test_in,(514,700,57))
