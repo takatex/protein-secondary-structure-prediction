@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import os
 import time
 import platform
 import numpy as np
 import gzip
+import collections
 
 import torch
 from torch import nn
@@ -44,6 +47,34 @@ def accuracy(out, target, seq_len):
     return np.array([np.equal(o[:l], t[:l]).sum()/l
                      for o, t, l in zip(out, target, seq_len)]).mean()
 
+
+def amino_count(t):
+    c = collections.Counter(t)
+    keys, values = c.keys(), c.values()
+    return list(keys), list(values)
+
+
+def acid_accuracy(out, target, seq_len):
+    out = out.cpu().data.numpy()
+    target = target.cpu().data.numpy()
+    seq_len = seq_len.cpu().data.numpy()
+
+    out = out.argmax(axis=2)
+
+    count_1 = np.zeros(8)
+    count_2 = np.zeros(8)
+    for o, t, l in zip(out, target, seq_len):
+        o, t = o[:l], t[:l]
+
+        # org
+        keys, values = amino_count(t)
+        count_1[keys] += values
+
+        # pred
+        keys, values = amino_count(t[np.equal(o, t)])
+        count_2[keys] += values
+
+    return np.divide(count_2, count_1, out=np.zeros(8), where=count_1!=0)
 
 def load_gz(path): # load a .npy.gz file
     if path.endswith(".gz"):

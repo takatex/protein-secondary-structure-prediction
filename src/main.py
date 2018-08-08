@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
+
 import os, sys
 sys.path.append(os.pardir)
 import numpy as np
-import pickle
-import time
 import argparse
-import collections
 from sklearn.model_selection import KFold
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
-from torch.autograd import Variable
 
 from data import LoadDataset
 from model import Net
@@ -50,9 +45,6 @@ def train(model, device, train_loader, optimizer, loss_function):
         out = model(data)
         loss = loss_function(out, target, seq_len)
         loss.backward()
-        # print(loss)
-        # loss = loss.to(device)
-        # print(loss)
         optimizer.step()
         train_loss += loss.item()
         # print(f'\rloss={loss.item()/len(data):.5f}', end=', ')

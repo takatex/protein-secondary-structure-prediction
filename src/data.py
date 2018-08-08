@@ -31,7 +31,7 @@ class LoadDataset(object):
     def __init__(self, batch_size_train, batch_size_test):
         self.batch_size_train = batch_size_train
         self.batch_size_test = batch_size_test
-        self.X, self.y, self.mask = self.load_dataset()
+        self.X, self.y, self.seq_len = self.load_dataset()
 
     def load_dataset(self):
         if not os.path.isfile(DATASET_PATH):
@@ -47,14 +47,14 @@ class LoadDataset(object):
 
     def __call__(self, idx):
         train_idx, test_idx = idx
-        X_train, y_train, mask_train, X_test, y_test, mask_test = \
-            self.X[train_idx], self.y[train_idx], self.mask[train_idx], \
-            self.X[test_idx], self.y[test_idx], self.mask[test_idx]
+        X_train, y_train, seq_len_train, X_test, y_test, seq_len_test = \
+            self.X[train_idx], self.y[train_idx], self.seq_len[train_idx], \
+            self.X[test_idx], self.y[test_idx], self.seq_len[test_idx]
 
-        D_train = MyDataset(X_train, y_train, mask_train)
+        D_train = MyDataset(X_train, y_train, seq_len_train)
         train_loader = DataLoader(D_train, batch_size=self.batch_size_train, shuffle=True)
 
-        D_test = MyDataset(X_test, y_test, mask_test)
+        D_test = MyDataset(X_test, y_test, seq_len_test)
         test_loader = DataLoader(D_test, batch_size=self.batch_size_test, shuffle=False)
 
         return train_loader, test_loader

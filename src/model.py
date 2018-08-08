@@ -41,13 +41,13 @@ class Net(nn.Module):
         # into (batch_size x seq_len x hidden_size)
         conv_out = conv_out.transpose(1, 2)
 
-        # bidirectional lstm
+        # bidirectional rnn
         out, _ = self.brnn(conv_out)
 
         out = torch.cat([conv_out, out], dim=2)
         # print(out.sum())
 
-        # Output shape is (batch_size x output_size x seq_len)
+        # Output shape is (batch_size x seq_len x classnum)
         out = self.fc(out)
         out = F.softmax(out, dim=2)
         return out
