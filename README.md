@@ -1,12 +1,14 @@
 # protein-secondary-structure-prediction
 
 PyTorch implementations of protein secondary structure prediction on CB513.
+
 I used CB513 dataset of https://github.com/alrojo/CB513.
 
 # Usage
-usage: main.py [-h] [-e EPOCHS] [-b BATCH_SIZE_TRAIN]
-               [-b_test BATCH_SIZE_TEST] [-k K_FOLD] [--save_dir SAVE_DIR]
-               [--no_cuda] [--seed S]
+```
+usage: python main.py [-h] [-e EPOCHS] [-b BATCH_SIZE_TRAIN]
+                      [-b_test BATCH_SIZE_TEST] [-k K_FOLD] [--save_dir SAVE_DIR]
+                      [--no_cuda] [--seed S]
 
 Protein Secondary Structure Prediction
 
@@ -23,6 +25,7 @@ optional arguments:
   --save_dir SAVE_DIR   Result path (default: ../data/result)
   --no_cuda             disables CUDA training
   --seed S              random seed (default: 1)
+```
 
 # Reference
 - https://arxiv.org/pdf/1604.07176.pdf
