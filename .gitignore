@@ -1,6 +1,6 @@
 # optianal
 .DS_Store
-data/
+data/result*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
