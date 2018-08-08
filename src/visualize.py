@@ -5,7 +5,7 @@ import collections
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.set('talk', 'whitegrid', 'dark', font_scale=1.5,
+sns.set('talk', 'darkgrid', 'dark', font_scale=1.5,
         rc={"lines.linewidth": 2, 'grid.linestyle': '--'})
 
 def show_save(show, save, save_path):
