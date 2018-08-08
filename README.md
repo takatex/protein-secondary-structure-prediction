@@ -1,4 +1,4 @@
-# protein-secondary-structure-prediction
+# pytorch-protein-secondary-structure-prediction
 
 PyTorch implementations of protein secondary structure prediction on CB513.
 
@@ -28,5 +28,4 @@ optional arguments:
 ```
 
 # Reference
-- https://arxiv.org/pdf/1604.07176.pdf
-- https://arxiv.org/pdf/1604.07176.pdf
+[Li, Zhen; Yu, Yizhou, Protein Secondary Structure Prediction Using Cascaded Convolutional and Recurrent Neural Networks, 2016.](https://arxiv.org/pdf/1604.07176.pdf)
