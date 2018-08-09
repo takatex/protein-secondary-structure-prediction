@@ -23,14 +23,19 @@ def download_dataset():
     print(f'Saved CB513 dataset in {DATASET_PATH}')
 
 
+def get_():
+    X_in = load_gz(TRAIN_PATH)
+    X = np.reshape(X_in,(5534,700,57))
+    del X_in
+    X = X[:,:,:]
+    labels = X[:,:,22:30]
+    mask = X[:,:,30] * -1 + 1
+
+    # b = np.arange(35,56)
+    X = X[:,:,35:56]
+    return X
+
 def get_train():
-    # if not os.path.isfile(TRAIN_PATH):
-    #     print("sss")
-    #     subprocess.call("./download_train.sh", shell=True)
-    # else:
-    #     pass
-        # print("Train path is downloaded ...")
-    # print("Loading train data ...")
     X_in = load_gz(TRAIN_PATH)
     X = np.reshape(X_in,(5534,700,57))
     del X_in
@@ -82,9 +87,6 @@ def get_train():
 
 
 def get_test():
-    # if not os.path.isfile(TEST_PATH):
-    #     subprocess.call("./download_test.sh", shell=True)
-    # print("Loading test data ...")
     X_test_in = load_gz(TEST_PATH)
     X_test = np.reshape(X_test_in,(514,700,57))
     del X_test_in
