@@ -1,5 +1,6 @@
 # optianal
 .DS_Store
+._.DS_Store
 data/
 notebook/*
 !visualize.ipynb
