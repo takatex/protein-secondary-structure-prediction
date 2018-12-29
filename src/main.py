@@ -23,8 +23,6 @@ parser.add_argument('-b', '--batch_size_train', type=int, default=128,
                     help='input batch size for training (default: 128)')
 parser.add_argument('-b_test', '--batch_size_test', type=int, default=1024,
                     help='input batch size for testing (default: 1024)')
-parser.add_argument('-k', '--k_fold', type=int, default=10,
-                    help='K-Folds cross-validator (default: 10)')
 parser.add_argument('--save_dir', type=str, default='../data/result',
                     help='Result path (default: ../data/result)')
 parser.add_argument('--no_cuda', action='store_true', default=False,
@@ -85,28 +83,25 @@ def main():
 
     # laod dataset and set k-fold cross validation
     D = LoadDataset(args.batch_size_train, args.batch_size_test)
-    idxs = np.arange(D.__len__())
-    kf = KFold(n_splits=args.k_fold)
 
-    for k, idx in enumerate(kf.split(idxs)):
-        train_loader, test_loader = D(idx)
+    train_loader, test_loader = D(idx)
 
-        # model, loss_function, optimizer
-        model = Net().to(device)
-        loss_function = loss_func
-        optimizer = torch.optim.Adam(model.parameters(), weight_decay=0.01)
+    # model, loss_function, optimizer
+    model = Net().to(device)
+    loss_function = loss_func
+    optimizer = torch.optim.Adam(model.parameters(), weight_decay=0.01)
 
-        # train and test
-        history = []
-        for e in range(1, args.epochs + 1):
-            train_loss = train(model, device, train_loader, optimizer, loss_function)
-            test_loss, acc = test(model, device, test_loader, loss_function)
-            history.append([train_loss, test_loss, acc])
-            show_progress(k+1, args.k_fold, e, args.epochs)
+    # train and test
+    history = []
+    for e in range(1, args.epochs + 1):
+        train_loss = train(model, device, train_loader, optimizer, loss_function)
+        test_loss, acc = test(model, device, test_loader, loss_function)
+        history.append([train_loss, test_loss, acc])
+        show_progress(k+1, args.k_fold, e, args.epochs)
 
-        # save train history and model
-        save_history(k, history, save_dir)
-        save_model(k, model, save_dir)
+    # save train history and model
+    save_history(k, history, save_dir)
+    save_model(k, model, save_dir)
 
 if __name__ == '__main__':
     main()

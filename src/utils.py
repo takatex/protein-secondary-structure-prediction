@@ -76,12 +76,14 @@ def acid_accuracy(out, target, seq_len):
 
     return np.divide(count_2, count_1, out=np.zeros(8), where=count_1!=0)
 
+
 def load_gz(path): # load a .npy.gz file
     if path.endswith(".gz"):
         f = gzip.open(path, 'rb')
         return np.load(f)
     else:
         return np.load(path)
+
 
 def timestamp():
     return time.strftime("%Y%m%d%H%M", time.localtime())
