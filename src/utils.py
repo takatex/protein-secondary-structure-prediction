@@ -2,20 +2,24 @@
 
 import os
 import time
-import platform
 import numpy as np
 import gzip
 import collections
-
 import torch
 from torch import nn
 
 
-def loss_func(out, target, seq_len):
-    loss = 0
-    for o, t, l in zip(out, target, seq_len):
-        loss += nn.CrossEntropyLoss()(o[:l], t[:l])
-    return loss
+class CrossEntropy(object):
+
+    def __init__(self):
+        pass
+
+    def __call__(self, out, target, seq_len):
+        loss = 0
+        for o, t, l in zip(out, target, seq_len):
+            loss += nn.CrossEntropyLoss()(o[:l], t[:l])
+        return loss
+
 
 # class LossFunc(object):
 #
@@ -88,16 +92,17 @@ def load_gz(path): # load a .npy.gz file
 def timestamp():
     return time.strftime("%Y%m%d%H%M", time.localtime())
 
-# def show_progress(k, e, b, b_total, loss):
-#     print(f'\r{e:3d} : [{b:3d} / {b_total:3d}] loss : {loss:.2f}', end='')
 
-def show_progress(k, k_total, e, e_total):
-    print(f'k:({k:2d}/{k_total:2d}), e:({e:3d}/{e_total:3d})')
+def show_progress(e, e_total, train_loss, test_loss, acc):
+    print(f'[{e:3d}/{e_total:3d}] train_loss:{train_loss:.2f}, '\
+          f'test_loss:{test_loss:.2f}, acc:{acc:.3f}')
 
-def save_history(k, history, save_dir):
-    save_path = os.path.join(save_dir, f'history_{k}.npy')
+
+def save_history(history, save_dir):
+    save_path = os.path.join(save_dir, 'history.npy')
     np.save(save_path, history)
 
-def save_model(k, model, save_dir):
-    save_path = os.path.join(save_dir, f'model_{k}.pth')
+
+def save_model(model, save_dir):
+    save_path = os.path.join(save_dir, 'model.pth')
     torch.save(model.state_dict(), save_path)
