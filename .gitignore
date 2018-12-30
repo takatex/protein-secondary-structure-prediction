@@ -3,7 +3,7 @@
 ._.DS_Store
 
 pssp-data/
-!pssp-data/*.png
+!./pssp-data/*.png
 notebook/
 result/
 
