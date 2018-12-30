@@ -22,7 +22,7 @@ I used CB513 dataset of https://github.com/alrojo/CB513.
 
 
 # Usage
-You can get infomations by adding `-h` option.
+You can get more infomations by adding `-h` option.
 
 ## pssp-nn
 ```
