@@ -2,10 +2,13 @@
 .DS_Store
 ._.DS_Store
 
-pssp-data/
-!./pssp-data/*.png
 notebook/
 result/
+*.pkl
+*.gz
+*.npz
+*.txt
+*.pt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
