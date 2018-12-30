@@ -1,31 +1,43 @@
-# pytorch-protein-secondary-structure-prediction
+# protein-secondary-structure-prediction
 
 PyTorch implementations of protein secondary structure prediction on CB513.
 
+I implemented them based on https://github.com/alrojo/CB513 and https://github.com/jadore801120/attention-is-all-you-need-pytorch.
+
+
+# Dataset
 I used CB513 dataset of https://github.com/alrojo/CB513.
 
+|sequence length (train)|sequence length (test)|
+|:-:|:-:|
+|![](https://github.com/takatex/protein-secondary-structure-prediction/blob/master/pssp-data/seqlen_train.png)|![](https://github.com/takatex/protein-secondary-structure-prediction/blob/master/pssp-data/seqlen_test.png)|
+
+|amino acid (train)|amino acid (test)|
+|:-:|:-:|
+|![](https://github.com/takatex/protein-secondary-structure-prediction/blob/master/pssp-data/amino_acid_train.png)|![](https://github.com/takatex/protein-secondary-structure-prediction/blob/master/pssp-data/amino_acid_test.png)|
+
+|secondary structure label(train)|secondary structure label (test)|
+|:-:|:-:|
+|![](https://github.com/takatex/protein-secondary-structure-prediction/blob/master/pssp-data/secondary_structure_train.png)|![](https://github.com/takatex/protein-secondary-structure-prediction/blob/master/pssp-data/secondary_structure_test.png)|
+
+
 # Usage
+You can get infomations by adding `-h` option.
+
+## pssp-nn
 ```
-usage: python main.py [-h] [-e EPOCHS] [-b BATCH_SIZE_TRAIN]
-                      [-b_test BATCH_SIZE_TEST] [-k K_FOLD] [--save_dir SAVE_DIR]
-                      [--no_cuda] [--seed S]
-
-Protein Secondary Structure Prediction
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -e EPOCHS, --epochs EPOCHS
-                        The number of epochs to run (default: 1000)
-  -b BATCH_SIZE_TRAIN, --batch_size_train BATCH_SIZE_TRAIN
-                        input batch size for training (default: 128)
-  -b_test BATCH_SIZE_TEST, --batch_size_test BATCH_SIZE_TEST
-                        input batch size for testing (default: 1024)
-  -k K_FOLD, --k_fold K_FOLD
-                        K-Folds cross-validator (default: 10)
-  --save_dir SAVE_DIR   Result path (default: ../data/result)
-  --no_cuda             disables CUDA training
-  --seed S              random seed (default: 1)
+python main.py
 ```
 
-# Reference
-[Li, Zhen; Yu, Yizhou, Protein Secondary Structure Prediction Using Cascaded Convolutional and Recurrent Neural Networks, 2016.](https://arxiv.org/pdf/1604.07176.pdf)
+## pssp-transformer
+```
+python preprocess.py
+python main.py
+```
+
+
+# Acknowledgement
+- https://github.com/alrojo/CB513 
+- https://github.com/jadore801120/attention-is-all-you-need-pytorch
+- [Li, Zhen; Yu, Yizhou, Protein Secondary Structure Prediction Using Cascaded Convolutional and Recurrent Neural Networks, 2016.](https://arxiv.org/pdf/1604.07176.pdf)
+- [Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin, Attention Is All You Need](https://arxiv.org/abs/1706.03762)
